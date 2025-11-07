@@ -1,0 +1,8 @@
+﻿.idea/
+.gradle/
+build/
+app/build/
+*.iml
+local.properties
+/captures/
+/.cxx/
