@@ -19,4 +19,19 @@ class AuthService {
   }
 
   Future<void> signOut() => _auth.signOut();
+
+  // Send password reset email
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  // Check if email exists
+  Future<bool> checkEmailExists(String email) async {
+    try {
+      final methods = await _auth.fetchSignInMethodsForEmail(email);
+      return methods.isNotEmpty;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
