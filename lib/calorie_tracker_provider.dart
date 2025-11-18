@@ -1,97 +1,82 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class CalorieTrackerProvider extends ChangeNotifier {
   int _calories = 0;
-  int get calories => _calories;
+  int _targetCalories = 0;
 
-  /// Nutrients map kept in your original structure:
-  /// { "Protein": {"value": 0, "max": 100}, ... }
+  // nutrients: value = current intake, max = daily target
   final Map<String, Map<String, int>> _nutrients = {
-    'Protein': {'value': 0, 'max': 120}, // tweak defaults if you want
-    'Carbs':   {'value': 0, 'max': 250},
-    'Fats':    {'value': 0, 'max': 70},
+    'Protein': {'value': 0, 'max': 120},
+    'Carbs': {'value': 0, 'max': 250},
+    'Fats': {'value': 0, 'max': 70},
   };
 
+  int get calories => _calories;
+  int get targetCalories => _targetCalories;
   Map<String, Map<String, int>> get nutrients => _nutrients;
 
-  // --- Calories ---
-
-  void addCalories(int amount) {
-    _calories += amount;
-    notifyListeners();
-  }
-
-  void setCalories(int newCalories) {
-    _calories = newCalories;
-    notifyListeners();
-  }
-
-  // --- Nutrients (macros) ---
-
-  /// Set an absolute value (your original method).
-  void updateNutrient(String name, int value) {
-    if (_nutrients.containsKey(name)) {
-      _nutrients[name]!['value'] = value.clamp(0, 1000000);
-      notifyListeners();
-    }
-  }
-
-  /// Increment macros by amounts (in grams). Values are rounded to int to match your map.
-  void addMacros({double protein = 0, double carbs = 0, double fats = 0}) {
-    _inc('Protein', protein);
-    _inc('Carbs',   carbs);
-    _inc('Fats',    fats);
-    notifyListeners();
-  }
-
-  /// Convenience: log one meal (per-unit * quantity).
+  /// Supports both:
+  /// - addMeal(calories: 500, protein: 30, carbs: 40, fats: 10)
+  /// - addMeal(caloriesPerUnit: 100, quantity: 2, proteinPerUnit: 5, ...)
   void addMeal({
-    required int caloriesPerUnit,
-    required int quantity,
-    double proteinPerUnit = 0,
-    double carbsPerUnit = 0,
-    double fatsPerUnit = 0,
+    // direct totals
+    int? calories,
+    int protein = 0,
+    int carbs = 0,
+    int fats = 0,
+
+    // per-unit style
+    int? caloriesPerUnit,
+    int quantity = 1,
+    int proteinPerUnit = 0,
+    int carbsPerUnit = 0,
+    int fatsPerUnit = 0,
   }) {
-    final totalCals = caloriesPerUnit * quantity;
-    final totalP = proteinPerUnit * quantity;
-    final totalC = carbsPerUnit   * quantity;
-    final totalF = fatsPerUnit    * quantity;
+    final qty = quantity;
 
-    _calories += totalCals;
-    _inc('Protein', totalP);
-    _inc('Carbs',   totalC);
-    _inc('Fats',    totalF);
+    // If direct calories are not provided, compute from per-unit
+    final totalCalories = calories ?? ((caloriesPerUnit ?? 0) * qty);
+
+    // For macros: if direct total is non-zero, use it;
+    // otherwise compute from per-unit * quantity.
+    final totalProtein = protein != 0 ? protein : proteinPerUnit * qty;
+    final totalCarbs = carbs != 0 ? carbs : carbsPerUnit * qty;
+    final totalFats = fats != 0 ? fats : fatsPerUnit * qty;
+
+    _calories += totalCalories;
+
+    // ✅ Safely read existing values with ?? 0 to avoid nullable errors
+    final currentProtein = _nutrients['Protein']?['value'] ?? 0;
+    final currentCarbs = _nutrients['Carbs']?['value'] ?? 0;
+    final currentFats = _nutrients['Fats']?['value'] ?? 0;
+
+    _nutrients['Protein']!['value'] = currentProtein + totalProtein;
+    _nutrients['Carbs']!['value'] = currentCarbs + totalCarbs;
+    _nutrients['Fats']!['value'] = currentFats + totalFats;
+
     notifyListeners();
   }
 
-  /// Set daily goals (max) for bars.
-  void setGoals({int? protein, int? carbs, int? fats}) {
-    if (protein != null && _nutrients.containsKey('Protein')) {
-      _nutrients['Protein']!['max'] = protein;
-    }
-    if (carbs != null && _nutrients.containsKey('Carbs')) {
-      _nutrients['Carbs']!['max'] = carbs;
-    }
-    if (fats != null && _nutrients.containsKey('Fats')) {
-      _nutrients['Fats']!['max'] = fats;
-    }
+  /// For old code that used `addCalories(...)`
+  void addCalories(int calories) {
+    addMeal(calories: calories);
+  }
+
+  /// Update daily targets from ProfileInfoPage
+  void updateTargets(int calories, int protein, int carbs, int fats) {
+    _targetCalories = calories;
+    _nutrients['Protein']!['max'] = protein;
+    _nutrients['Carbs']!['max'] = carbs;
+    _nutrients['Fats']!['max'] = fats;
     notifyListeners();
   }
 
-  /// Reset all daily totals.
-  void resetToday() {
+  /// Optional: reset daily intake
+  void resetDay() {
     _calories = 0;
-    for (final e in _nutrients.values) {
-      e['value'] = 0;
-    }
+    _nutrients['Protein']!['value'] = 0;
+    _nutrients['Carbs']!['value'] = 0;
+    _nutrients['Fats']!['value'] = 0;
     notifyListeners();
-  }
-
-  // --- helpers ---
-
-  void _inc(String key, double by) {
-    if (!_nutrients.containsKey(key)) return;
-    final current = _nutrients[key]!['value'] ?? 0;
-    _nutrients[key]!['value'] = (current + by.round()).clamp(0, 1000000);
   }
 }
