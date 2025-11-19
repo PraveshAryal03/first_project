@@ -40,7 +40,22 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final name = _nameCtrl.text.trim();
-    final calories = int.tryParse(_caloriesCtrl.text.trim()) ?? 0;
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a food name')),
+      );
+      return;
+    }
+
+    final caloriesText = _caloriesCtrl.text.trim();
+    if (caloriesText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter calories')),
+      );
+      return;
+    }
+
+    final calories = int.tryParse(caloriesText) ?? 0;
     final protein = int.tryParse(_proteinCtrl.text.trim()) ?? 0;
     final carbs = int.tryParse(_carbsCtrl.text.trim()) ?? 0;
     final fats = int.tryParse(_fatsCtrl.text.trim()) ?? 0;
@@ -311,7 +326,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                       controller: _proteinCtrl,
                       decoration: InputDecoration(
                         labelText: 'Protein',
-                        hintText: '25',
+                        hintText: '0',
                         prefixIcon: const Icon(Icons.egg, color: Colors.orange),
                         suffixText: 'g',
                         border: OutlineInputBorder(
@@ -323,7 +338,15 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       onChanged: (_) => setState(() {}),
-                      validator: (v) => v == null || v.isEmpty ? null : null,
+                      validator: (v) {
+                        if (v != null && v.isNotEmpty) {
+                          final n = int.tryParse(v);
+                          if (n == null || n < 0) {
+                            return 'Invalid';
+                          }
+                        }
+                        return null;
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -332,7 +355,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                       controller: _carbsCtrl,
                       decoration: InputDecoration(
                         labelText: 'Carbs',
-                        hintText: '45',
+                        hintText: '0',
                         prefixIcon: const Icon(Icons.grain, color: Colors.amber),
                         suffixText: 'g',
                         border: OutlineInputBorder(
@@ -344,7 +367,15 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       onChanged: (_) => setState(() {}),
-                      validator: (v) => v == null || v.isEmpty ? null : null,
+                      validator: (v) {
+                        if (v != null && v.isNotEmpty) {
+                          final n = int.tryParse(v);
+                          if (n == null || n < 0) {
+                            return 'Invalid';
+                          }
+                        }
+                        return null;
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -353,7 +384,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                       controller: _fatsCtrl,
                       decoration: InputDecoration(
                         labelText: 'Fats',
-                        hintText: '10',
+                        hintText: '0',
                         prefixIcon: const Icon(Icons.opacity, color: Colors.yellow),
                         suffixText: 'g',
                         border: OutlineInputBorder(
@@ -365,7 +396,15 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       onChanged: (_) => setState(() {}),
-                      validator: (v) => v == null || v.isEmpty ? null : null,
+                      validator: (v) {
+                        if (v != null && v.isNotEmpty) {
+                          final n = int.tryParse(v);
+                          if (n == null || n < 0) {
+                            return 'Invalid';
+                          }
+                        }
+                        return null;
+                      },
                     ),
                   ),
                 ],
