@@ -76,13 +76,15 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     setState(() => _saving = true);
 
     try {
-      // 1) Update app state via Provider
-      context.read<CalorieTrackerProvider>().addMeal(
-            calories: totalCalories,
-            protein: totalProtein,
-            carbs: totalCarbs,
-            fats: totalFats,
-          );
+      // 1) Update app state via Provider (instant)
+      if (mounted) {
+        context.read<CalorieTrackerProvider>().addMeal(
+              calories: totalCalories,
+              protein: totalProtein,
+              carbs: totalCarbs,
+              fats: totalFats,
+            );
+      }
 
       // 2) Save to Firestore if signed-in
       final user = FirebaseAuth.instance.currentUser;
@@ -104,23 +106,32 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       }
 
       if (!mounted) return;
+      
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('✓ Logged: $name ($totalCalories kcal)'),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
         ),
       );
-      Navigator.pop(context);
+      
+      // Reset state and pop
+      setState(() => _saving = false);
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } catch (e) {
       if (!mounted) return;
+      setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to log: $e'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
         ),
       );
-    } finally {
-      if (mounted) setState(() => _saving = false);
     }
   }
 
