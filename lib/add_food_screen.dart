@@ -107,29 +107,15 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
 
       if (!mounted) return;
       
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✓ Logged: $name ($totalCalories kcal)'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      
-      // Reset state and pop
-      setState(() => _saving = false);
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      // Pop immediately - success!
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to log: $e'),
+          content: Text('Error: $e'),
           backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
         ),
       );
     }
